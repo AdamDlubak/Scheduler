@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/README.md">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/README.md" />
+              <option name="updatedContent" value="# Generator dyzurow pracownikow (OR-Tools CP-SAT)&#10;&#10;Skrypt buduje grafik dyzurow na dni robocze miesiaca, uwzgledniajac:&#10;- niedostepnosci tygodniowe,&#10;- urlopy,&#10;- wymuszone dyzury,&#10;- twarde reguly sekwencji,&#10;- miekkie kryteria wyrownywania obciazen.&#10;&#10;## Pliki&#10;- `generator_dyzurow_czerwiec_2026.py` - glowny skrypt (latwo rozszerzalny dla kolejnych miesiecy),&#10;- `requirements.txt` - zaleznosci Pythona,&#10;- `grafik_czerwiec_2026.xlsx` - wynik (po uruchomieniu skryptu).&#10;&#10;## Uruchomienie&#10;```bash&#10;python3 -m pip install -r requirements.txt&#10;python3 generator_dyzurow_czerwiec_2026.py&#10;```&#10;&#10;## Jak dostosowac do innego miesiaca&#10;W funkcji `june_2026_config()` podmien:&#10;- `year`, `month`,&#10;- `employees`,&#10;- `holidays`,&#10;- `weekly_unavailability`,&#10;- `weekly_availability_exceptions`,&#10;- `vacations`,&#10;- `forced_assignments`.&#10;&#10;Reszta logiki modelu pozostaje bez zmian.&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/requirements.txt">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/requirements.txt" />
+              <option name="updatedContent" value="ortools&gt;=9.10&#10;openpyxl&gt;=3.1&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
