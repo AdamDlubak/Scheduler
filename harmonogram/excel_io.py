@@ -8,6 +8,7 @@ from typing import Dict, List, Set, Tuple
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.utils import get_column_letter
 
 from harmonogram.models import (
     ExcelLoadResult,
@@ -79,12 +80,19 @@ THIN_BORDER = Border(
 CENTER_WRAP_ALIGNMENT = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
 CASE_DESCRIPTION_TEXT = "cywilne - rodzinne i opiekuńcze oraz z zakresu postępowań w sprawach nieletnich"
+HELP_HEADER_FILL = PatternFill(fill_type="solid", start_color="FFD9EAF7", end_color="FFD9EAF7")
+HELP_BODY_FILL = PatternFill(fill_type="solid", start_color="FFF3F8FF", end_color="FFF3F8FF")
 
 
 def clean_text_value(raw: object) -> str:
     if raw is None:
         return ""
     return " ".join(str(raw).replace("\r", " ").replace("\n", " ").split()).strip()
+
+
+def row_has_any_value_in_prefix(row: Tuple[object, ...], expected_cols: int) -> bool:
+    """Sprawdzaj tylko kolumny danych; kolumny pomocnicze z opisami ignorujemy."""
+    return row_has_any_value(row[:expected_cols])
 
 
 def canonical_text_key(raw: object) -> str:
@@ -104,9 +112,46 @@ def resolve_employee_name(
         return None
     canonical = canonical_text_key(cleaned_value)
     if canonical not in employee_lookup:
-        errors.append(f"Arkusz '{sheet_name}', wiersz {row_idx}: nieznany pracownik '{cleaned_value}'.")
+        message = f"Arkusz '{sheet_name}', wiersz {row_idx}: pracownik '{cleaned_value}' nie istnieje w arkuszu 'Pracownicy'."
+        if message not in errors:
+            errors.append(message)
         return None
     return employee_lookup[canonical]
+
+
+def validate_employee_references(
+    workbook: Workbook,
+    employee_lookup: Dict[str, str],
+    errors: List[str],
+) -> None:
+    """Sprawdza, czy pracownicy wpisani w arkuszach pomocniczych istnieją w arkuszu Pracownicy."""
+    checks = (
+        ("Niedostepnosc_tygodniowa", 0, 2),
+        ("Wyjatki_dostepnosci", 0, 2),
+        ("Urlopy", 0, 3),
+        ("Wymuszenia", 2, 3),
+    )
+    seen_unknown: Set[Tuple[str, int, str]] = set()
+
+    for sheet_name, employee_col, expected_cols in checks:
+        if sheet_name not in workbook.sheetnames:
+            continue
+        worksheet = workbook[sheet_name]
+        for row_idx, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True), start=2):
+            if not row_has_any_value_in_prefix(row, expected_cols):
+                continue
+            raw_employee = row[employee_col] if len(row) > employee_col else None
+            cleaned = clean_text_value(raw_employee)
+            if cleaned == "":
+                continue
+            canonical = canonical_text_key(cleaned)
+            if canonical in employee_lookup:
+                continue
+            key = (sheet_name, row_idx, cleaned)
+            if key in seen_unknown:
+                continue
+            seen_unknown.add(key)
+            errors.append(f"Arkusz '{sheet_name}', wiersz {row_idx}: pracownik '{cleaned}' nie istnieje w arkuszu 'Pracownicy'.")
 
 
 def parse_date_value(raw: object, field_name: str) -> date:
@@ -141,31 +186,34 @@ def parse_weekday(raw: object) -> int:
         raise ValueError("Puste pole dnia tygodnia.")
     if isinstance(raw, (int, float)):
         value = int(raw)
+        if 1 <= value <= 7:
+            return value - 1
         if 0 <= value <= 6:
             return value
-        raise ValueError(f"Dzien tygodnia poza zakresem 0-6: {raw}")
+        raise ValueError(f"Dzien tygodnia poza zakresem 1-7: {raw}")
 
     text = clean_text_value(raw).casefold()
     names = {
         "0": 0,
+        "1": 0,
         "pon": 0,
         "poniedzialek": 0,
-        "1": 1,
+        "2": 1,
         "wt": 1,
         "wtorek": 1,
-        "2": 2,
+        "3": 2,
         "sr": 2,
         "sroda": 2,
-        "3": 3,
+        "4": 3,
         "czw": 3,
         "czwartek": 3,
-        "4": 4,
+        "5": 4,
         "pt": 4,
         "piatek": 4,
-        "5": 5,
+        "6": 5,
         "sob": 5,
         "sobota": 5,
-        "6": 6,
+        "7": 6,
         "niedz": 6,
         "niedziela": 6,
     }
@@ -257,7 +305,7 @@ def load_config_from_excel(path: str) -> ExcelLoadResult:
 
     ws_employees = workbook["Pracownicy"]
     for row_idx, row in enumerate(ws_employees.iter_rows(min_row=2, values_only=True), start=2):
-        if not row_has_any_value(row):
+        if not row_has_any_value_in_prefix(row, 3):
             continue
         raw_name = row[0] if len(row) > 0 else None
         cleaned_name = clean_text_value(raw_name)
@@ -292,12 +340,15 @@ def load_config_from_excel(path: str) -> ExcelLoadResult:
     if not employees:
         errors.append("Arkusz 'Pracownicy' nie zawiera zadnej aktywnej osoby.")
 
+    if employees:
+        validate_employee_references(workbook, employee_lookup, errors)
+
     holidays: Set[date] = set()
     if "Swieta" in workbook.sheetnames:
         worksheet = workbook["Swieta"]
         seen_holidays: Set[date] = set()
         for row_idx, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True), start=2):
-            if not row_has_any_value(row):
+            if not row_has_any_value_in_prefix(row, 1):
                 continue
             raw_day = row[0] if len(row) > 0 else None
             if raw_day is None:
@@ -322,7 +373,7 @@ def load_config_from_excel(path: str) -> ExcelLoadResult:
         worksheet = workbook["Niedostepnosc_tygodniowa"]
         seen_weekly: Set[Tuple[str, int]] = set()
         for row_idx, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True), start=2):
-            if not row_has_any_value(row):
+            if not row_has_any_value_in_prefix(row, 2):
                 continue
             raw_employee = row[0] if len(row) > 0 else None
             raw_weekday = row[1] if len(row) > 1 else None
@@ -353,7 +404,7 @@ def load_config_from_excel(path: str) -> ExcelLoadResult:
         worksheet = workbook["Wyjatki_dostepnosci"]
         seen_exceptions: Set[Tuple[str, date]] = set()
         for row_idx, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True), start=2):
-            if not row_has_any_value(row):
+            if not row_has_any_value_in_prefix(row, 2):
                 continue
             raw_employee = row[0] if len(row) > 0 else None
             raw_day = row[1] if len(row) > 1 else None
@@ -386,7 +437,7 @@ def load_config_from_excel(path: str) -> ExcelLoadResult:
     if "Urlopy" in workbook.sheetnames:
         worksheet = workbook["Urlopy"]
         for row_idx, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True), start=2):
-            if not row_has_any_value(row):
+            if not row_has_any_value_in_prefix(row, 3):
                 continue
             raw_employee = row[0] if len(row) > 0 else None
             raw_start = row[1] if len(row) > 1 else None
@@ -420,7 +471,7 @@ def load_config_from_excel(path: str) -> ExcelLoadResult:
         seen_forced: Dict[Tuple[date, str], str] = {}
         seen_employee_day: Dict[Tuple[str, date], str] = {}
         for row_idx, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True), start=2):
-            if not row_has_any_value(row):
+            if not row_has_any_value_in_prefix(row, 3):
                 continue
             raw_day = row[0] if len(row) > 0 else None
             raw_shift = row[1] if len(row) > 1 else None
@@ -468,7 +519,7 @@ def load_config_from_excel(path: str) -> ExcelLoadResult:
         worksheet = workbook["Parametry"]
         seen_param_keys: Set[str] = set()
         for row_idx, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True), start=2):
-            if not row_has_any_value(row):
+            if not row_has_any_value_in_prefix(row, 2):
                 continue
             raw_key = row[0] if len(row) > 0 else None
             raw_value = row[1] if len(row) > 1 else None
@@ -508,7 +559,7 @@ def load_config_from_excel(path: str) -> ExcelLoadResult:
         worksheet = workbook["Wagi_celu"]
         seen_weight_keys: Set[str] = set()
         for row_idx, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True), start=2):
-            if not row_has_any_value(row):
+            if not row_has_any_value_in_prefix(row, 2):
                 continue
             raw_key = row[0] if len(row) > 0 else None
             raw_value = row[1] if len(row) > 1 else None
@@ -567,7 +618,7 @@ def add_instruction_sheet(workbook: Workbook) -> None:
         ("1", "W arkuszu Meta ustaw year i month."),
         ("2", "W arkuszu Pracownicy wpisz osoby i opcjonalne flagi (0/1)."),
         ("3", "W arkuszu Urlopy podaj zakresy Data_od i Data_do."),
-        ("4", "W arkuszu Niedostepnosc_tygodniowa wpisuj dni jako 0-6 lub nazwy (pon, wt, sr...)."),
+        ("4", "W arkuszu Niedostepnosc_tygodniowa wpisuj dni jako 1-7 (1=pon, 7=niedz) lub nazwy (pon, wt, sr...)."),
         ("5", "W arkuszu Wymuszenia wpisuj typ dyzuru: glowny albo dodatkowy."),
         ("6", "Uruchom: python3 generator_dyzurow_czerwiec_2026.py --config <plik.xlsx> --validate-only"),
         ("7", "Jesli walidacja jest poprawna, uruchom generowanie grafiku bez --validate-only."),
@@ -701,6 +752,37 @@ def _apply_template_column_widths(worksheet) -> None:
         worksheet.column_dimensions[col_letter].width = width
 
 
+def _add_sheet_help_box(worksheet, start_col: int, lines: List[Tuple[str, str]]) -> None:
+    """Dodaje blok pomocy po prawej stronie arkusza (poza kolumnami parsowanymi)."""
+    label_col = start_col
+    help_col = start_col + 1
+    worksheet.cell(row=1, column=label_col).value = "Pole"
+    worksheet.cell(row=1, column=help_col).value = "Opis / format"
+    worksheet.cell(row=1, column=label_col).font = Font(bold=True)
+    worksheet.cell(row=1, column=help_col).font = Font(bold=True)
+    worksheet.cell(row=1, column=label_col).fill = copy(HELP_HEADER_FILL)
+    worksheet.cell(row=1, column=help_col).fill = copy(HELP_HEADER_FILL)
+    worksheet.cell(row=1, column=label_col).border = copy(THIN_BORDER)
+    worksheet.cell(row=1, column=help_col).border = copy(THIN_BORDER)
+    worksheet.cell(row=1, column=label_col).alignment = copy(CENTER_WRAP_ALIGNMENT)
+    worksheet.cell(row=1, column=help_col).alignment = copy(CENTER_WRAP_ALIGNMENT)
+
+    for idx, (field_name, description) in enumerate(lines, start=2):
+        label_cell = worksheet.cell(row=idx, column=label_col)
+        help_cell = worksheet.cell(row=idx, column=help_col)
+        label_cell.value = field_name
+        help_cell.value = description
+        label_cell.fill = copy(HELP_BODY_FILL)
+        help_cell.fill = copy(HELP_BODY_FILL)
+        label_cell.border = copy(THIN_BORDER)
+        help_cell.border = copy(THIN_BORDER)
+        label_cell.alignment = copy(CENTER_WRAP_ALIGNMENT)
+        help_cell.alignment = copy(CENTER_WRAP_ALIGNMENT)
+
+    worksheet.column_dimensions[get_column_letter(label_col)].width = 28
+    worksheet.column_dimensions[get_column_letter(help_col)].width = 68
+
+
 def export_schedule_to_excel(
     result: ScheduleResult,
     output_path: str,
@@ -758,6 +840,14 @@ def export_config_to_excel(config: SchedulerConfig, output_path: str) -> None:
     meta.append(["Parametr", "Wartosc"])
     meta.append(["year", config.year])
     meta.append(["month", config.month])
+    _add_sheet_help_box(
+        meta,
+        start_col=4,
+        lines=[
+            ("year", "Rok planowania, liczba 4-cyfrowa, np. 2026."),
+            ("month", "Miesiac planowania: 1-12 (np. 7 = lipiec)."),
+        ],
+    )
 
     employees = workbook.create_sheet("Pracownicy")
     employees.append(["Pracownik", "Bez_glownego", "Preferuj_mniej_dyzurow"])
@@ -769,44 +859,113 @@ def export_config_to_excel(config: SchedulerConfig, output_path: str) -> None:
                 1 if employee in config.prefer_less_duties_employees else 0,
             ]
         )
+    _add_sheet_help_box(
+        employees,
+        start_col=5,
+        lines=[
+            ("Pracownik", "Imie i nazwisko lub unikalna nazwa osoby."),
+            ("Bez_glownego", "0 lub 1. 1 = osoba nie moze pelnic dyzuru glownego."),
+            ("Preferuj_mniej_dyzurow", "0 lub 1. 1 = solver stara sie dawac mniej dyzurow tej osobie."),
+        ],
+    )
 
     holidays = workbook.create_sheet("Swieta")
     holidays.append(["Data"])
     for holiday in sorted(config.holidays):
         holidays.append([holiday.isoformat()])
+    _add_sheet_help_box(
+        holidays,
+        start_col=3,
+        lines=[
+            ("Data", "Data swieta do wykluczenia z planowania. Format: RRRR-MM-DD lub DD.MM.RRRR."),
+            ("Uwaga", "Podawaj tylko daty z miesiaca ustawionego w arkuszu Meta."),
+        ],
+    )
 
     weekly = workbook.create_sheet("Niedostepnosc_tygodniowa")
     weekly.append(["Pracownik", "Dzien_tygodnia"])
     for employee in config.employees:
         for weekday in sorted(config.weekly_unavailability.get(employee, set())):
-            weekly.append([employee, weekday])
+            weekly.append([employee, weekday + 1])
+    _add_sheet_help_box(
+        weekly,
+        start_col=4,
+        lines=[
+            ("Pracownik", "Nazwa osoby z arkusza Pracownicy."),
+            ("Dzien_tygodnia", "1-7 albo nazwa: pon, wt, sr, czw, pt, sob, niedz."),
+            ("Przyklad", "Ania | 1 oznacza niedostepnosc w kazdy poniedzialek."),
+        ],
+    )
 
     exceptions = workbook.create_sheet("Wyjatki_dostepnosci")
     exceptions.append(["Pracownik", "Data"])
     for employee, days in sorted(config.weekly_availability_exceptions.items()):
         for day in sorted(days):
             exceptions.append([employee, day.isoformat()])
+    _add_sheet_help_box(
+        exceptions,
+        start_col=4,
+        lines=[
+            ("Pracownik", "Nazwa osoby z arkusza Pracownicy."),
+            ("Data", "Jednorazowy wyjatek dostepnosci. Format daty: RRRR-MM-DD lub DD.MM.RRRR."),
+            ("Przyklad", "Osoba ma zwykle wolny poniedzialek, ale 2026-07-06 moze pracowac."),
+        ],
+    )
 
     vacations = workbook.create_sheet("Urlopy")
     vacations.append(["Pracownik", "Data_od", "Data_do"])
     for employee, ranges in sorted(config.vacations.items()):
         for vacation in ranges:
             vacations.append([employee, vacation.start.isoformat(), vacation.end.isoformat()])
+    _add_sheet_help_box(
+        vacations,
+        start_col=5,
+        lines=[
+            ("Pracownik", "Nazwa osoby z arkusza Pracownicy."),
+            ("Data_od", "Poczatek urlopu. Format: RRRR-MM-DD lub DD.MM.RRRR."),
+            ("Data_do", "Koniec urlopu. Data_do musi byc >= Data_od."),
+        ],
+    )
 
     forced = workbook.create_sheet("Wymuszenia")
     forced.append(["Data", "Typ_dyzuru", "Pracownik"])
     for (day, shift), employee in sorted(config.forced_assignments.items(), key=lambda item: (item[0][0], item[0][1])):
         forced.append([day.isoformat(), shift, employee])
+    _add_sheet_help_box(
+        forced,
+        start_col=5,
+        lines=[
+            ("Data", "Dzien wymuszenia. Format: RRRR-MM-DD lub DD.MM.RRRR."),
+            ("Typ_dyzuru", "Dopuszczalne: glowny lub dodatkowy."),
+            ("Pracownik", "Nazwa osoby z arkusza Pracownicy."),
+        ],
+    )
 
     params = workbook.create_sheet("Parametry")
     params.append(["Parametr", "Wartosc"])
     params.append(["solver_max_time_seconds", config.solver_max_time_seconds])
     params.append(["solver_num_workers", config.solver_num_workers])
+    _add_sheet_help_box(
+        params,
+        start_col=4,
+        lines=[
+            ("solver_max_time_seconds", "Limit czasu solvera w sekundach. Liczba calkowita > 0."),
+            ("solver_num_workers", "Liczba watkow solvera. Liczba calkowita > 0."),
+        ],
+    )
 
     weights = workbook.create_sheet("Wagi_celu")
     weights.append(["Parametr", "Waga"])
     for key in KNOWN_WEIGHT_KEYS:
         weights.append([key, int(config.objective_weights.get(key, 0))])
+    _add_sheet_help_box(
+        weights,
+        start_col=4,
+        lines=[
+            ("Parametr", "Nazwa wagi celu (zostaw domyslne, jesli nie wiesz co zmieniac)."),
+            ("Waga", "Liczba calkowita > 0. Wieksza wartosc = wiekszy priorytet kryterium."),
+        ],
+    )
 
     add_instruction_sheet(workbook)
     workbook.save(output_path)
