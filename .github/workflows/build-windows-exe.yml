@@ -35,16 +35,16 @@ jobs:
 
       - name: Build EXE (PyInstaller)
         run: |
-          pyinstaller --noconfirm --clean --windowed --name Harmonogram-Dyzurow --add-data "templates;templates" app.py
+          pyinstaller --noconfirm --clean --windowed --name Scheduler-Dyzurow --add-data "templates;templates" app.py
 
       - name: Add user launcher and note
         shell: pwsh
         run: |
-          $target = "dist\Harmonogram-Dyzurow"
+          $target = "dist\Scheduler-Dyzurow"
           @'
           @echo off
           start "" "http://127.0.0.1:5001"
-          start "" "%~dp0Harmonogram-Dyzurow.exe"
+          start "" "%~dp0Scheduler-Dyzurow.exe"
           '@ | Set-Content -Path "$target\Start.bat" -Encoding ASCII
 
           @'
@@ -52,7 +52,7 @@ jobs:
 
           1) Kliknij Start.bat
           2) Aplikacja otworzy się w przeglądarce pod adresem http://127.0.0.1:5001
-          3) Gdy skończysz pracę, zamknij okno aplikacji (Harmonogram-Dyzurow.exe)
+          3) Gdy skończysz pracę, zamknij okno aplikacji (Scheduler-Dyzurow.exe)
 
           Uwagi:
           - Do działania potrzebny jest Microsoft Excel do otwierania wynikowych plików .xlsx.
@@ -63,13 +63,13 @@ jobs:
         shell: pwsh
         run: |
           $label = "${{ github.event.inputs.release_label }}"
-          Compress-Archive -Path "dist\Harmonogram-Dyzurow\*" -DestinationPath "Harmonogram-Dyzurow-$label.zip" -Force
+          Compress-Archive -Path "dist\Scheduler-Dyzurow\*" -DestinationPath "Scheduler-Dyzurow-$label.zip" -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-exe-${{ github.event.inputs.release_label }}
-          path: Harmonogram-Dyzurow-${{ github.event.inputs.release_label }}.zip
+          path: Scheduler-Dyzurow-${{ github.event.inputs.release_label }}.zip
           if-no-files-found: error
 
       - name: Publish to Releases
@@ -77,8 +77,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.release_label }}
-          name: Harmonogram Dyzurow ${{ github.event.inputs.release_label }}
-          files: Harmonogram-Dyzurow-${{ github.event.inputs.release_label }}.zip
+          name: Scheduler Dyzurow ${{ github.event.inputs.release_label }}
+          files: Scheduler-Dyzurow-${{ github.event.inputs.release_label }}.zip
           generate_release_notes: true
 
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generator Harmonogramów Dyżurów</title>
+    <title>Scheduler Dyżurów</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
@@ -369,8 +369,8 @@
     <div class="container container-main">
         <!-- Header -->
         <div class="header">
-            <h1><i class="bi bi-calendar-check"></i> Generator Harmonogramów Dyżurów</h1>
-            <p>Szybka i łatwa konfiguracja harmonogramów pracowników</p>
+            <h1><i class="bi bi-calendar-check"></i> Scheduler Dyżurów</h1>
+            <p>Szybka i łatwa konfiguracja schedulerów pracowników</p>
         </div>
 
         <!-- Step Indicator -->
@@ -400,13 +400,13 @@
         <!-- Main Card -->
         <div class="card">
             <div class="card-header">
-                <i class="bi bi-file-earmark-spreadsheet"></i> Harmonogram Dyżurów
+                <i class="bi bi-file-earmark-spreadsheet"></i> Scheduler Dyżurów
             </div>
             <div class="card-body">
                 <!-- Step 1: Upload -->
                 <div class="step active" id="step-1">
                     <h5 class="mb-3"><i class="bi bi-1-circle"></i> Krok 1: Wgranie pliku</h5>
-                    <p class="text-muted">Załaduj plik Excel z danymi pracowników i parametrami harmonogramu.</p>
+                    <p class="text-muted">Załaduj plik Excel z danymi pracowników i parametrami schedulera.</p>
                     <div id="uploadMessages"></div>
 
                     <div class="upload-area" id="uploadArea">
@@ -458,26 +458,26 @@
                             <i class="bi bi-arrow-left"></i> Wróć
                         </button>
                         <button class="btn btn-primary btn-step" id="btnGenerate" disabled>
-                            <i class="bi bi-arrow-right"></i> Wygeneruj harmonogram
+                            <i class="bi bi-arrow-right"></i> Wygeneruj scheduler
                         </button>
                     </div>
                 </div>
 
                 <!-- Step 3: Generation -->
                 <div class="step" id="step-3">
-                    <h5 class="mb-3"><i class="bi bi-3-circle"></i> Krok 3: Generowanie harmonogramu</h5>
+                    <h5 class="mb-3"><i class="bi bi-3-circle"></i> Krok 3: Generowanie schedulera</h5>
                     <p class="text-muted">Optymalizacja… trwa obliczanie najlepszego rozkładu dyżurów.</p>
 
                     <div class="spinner-container" id="generationSpinner">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Ładowanie...</span>
                         </div>
-                        <div class="loading-message" id="generationMessage">Optymalizacja harmonogramu...</div>
+                        <div class="loading-message" id="generationMessage">Optymalizacja schedulera...</div>
                     </div>
 
                     <div id="generationResult" style="display: none;">
                         <div class="alert alert-success">
-                            <i class="bi bi-check-circle"></i> <strong>Harmonogram wygenerowany pomyślnie!</strong>
+                            <i class="bi bi-check-circle"></i> <strong>Scheduler wygenerowany pomyślnie!</strong>
                         </div>
 
                         <div class="result-section">
@@ -512,7 +512,7 @@
                         </div>
 
                         <div class="result-section">
-                            <div class="result-header">Podgląd harmonogramu</div>
+                            <div class="result-header">Podgląd schedulera</div>
                             <div style="overflow-x: auto;">
                                 <table class="table schedule-table" id="scheduleTable">
                                     <thead>
@@ -545,7 +545,7 @@
                     <h5 class="mb-3"><i class="bi bi-4-circle"></i> Krok 4: Pobranie wyniku</h5>
 
                     <div class="alert alert-success">
-                        <i class="bi bi-check-circle"></i> <strong>Gotowe!</strong> Harmonogram został wygenerowany. Możesz go teraz pobrać.
+                        <i class="bi bi-check-circle"></i> <strong>Gotowe!</strong> Scheduler został wygenerowany. Możesz go teraz pobrać.
                     </div>
 
                     <div class="button-group">
@@ -553,7 +553,7 @@
                             <i class="bi bi-arrow-left"></i> Wróć
                         </button>
                         <button class="btn btn-success btn-step" id="btnDownloadFile">
-                            <i class="bi bi-download"></i> Pobierz harmonogram
+                            <i class="bi bi-download"></i> Pobierz scheduler
                         </button>
                         <button class="btn btn-primary btn-step" id="btnStartOver">
                             <i class="bi bi-arrow-counterclockwise"></i> Zacznij od nowa

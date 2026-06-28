@@ -9,9 +9,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		generator.py = generator.py
 		.gitignore = .gitignore
 		.github\workflows\build-windows-exe.yml = .github\workflows\build-windows-exe.yml
-		harmonogram\excel_io.py = harmonogram\excel_io.py
-		harmonogram\solver.py = harmonogram\solver.py
-		harmonogram\validator.py = harmonogram\validator.py
+		scheduler\excel_io.py = scheduler\excel_io.py
+		scheduler\solver.py = scheduler\solver.py
+		scheduler\validator.py = scheduler\validator.py
 		templates\index.html = templates\index.html
 	EndProjectSection
 EndProject

@@ -5,21 +5,21 @@ a kod jest rozbity na moduly (loader/walidator/solver).
 
 ## Pliki
 - `generator.py` - glowny runner CLI,
-- `harmonogram/excel_io.py` - odczyt/zapis Excel + raport diagnostyczny,
-- `harmonogram/validator.py` - walidacje techniczne i biznesowe,
-- `harmonogram/solver.py` - model CP-SAT,
-- `harmonogram/sample_data.py` - przykladowa konfiguracja,
-- `harmonogram/models.py` - dataclass i stale,
+- `scheduler/excel_io.py` - odczyt/zapis Excel + raport diagnostyczny,
+- `scheduler/validator.py` - walidacje techniczne i biznesowe,
+- `scheduler/solver.py` - model CP-SAT,
+- `scheduler/sample_data.py` - przykladowa konfiguracja,
+- `scheduler/models.py` - dataclass i stale,
 - `requirements.txt` - zaleznosci Pythona,
 - plik wejsciowy XLSX z danymi (tworzony poleceniem `--create-template` lub `--export-sample-config`),
-- wynikowy plik XLSX z harmonogramem.
+- wynikowy plik XLSX z schedulerem.
 
 ## Instalacja
 ```bash
 python3 -m pip install -r requirements.txt
 ```
 
-## Budowanie paczki EXE na Windows (z macOS przez GitHub)
+## Budowanie paczki EXE na Windows
 W repo jest manualny workflow: `.github/workflows/build-windows-exe.yml`.
 
 Jak zbudowac nowa wersje paczki:
@@ -28,26 +28,21 @@ Jak zbudowac nowa wersje paczki:
 3. Kliknij **Run workflow** i podaj `release_label` (np. `v1.3.0`).
 4. Opcja `publish_release=true` opublikuje ten sam ZIP w zakladce **Releases**.
 5. Po zakonczeniu pobierz artefakt `windows-exe-<release_label>`.
-6. W artefakcie bedzie ZIP `Harmonogram-Dyzurow-<release_label>.zip` gotowy do wyslania uzytkownikowi Windows.
+6. W artefakcie bedzie ZIP `Scheduler-Dyzurow-<release_label>.zip` gotowy do wyslania uzytkownikowi Windows.
 
 Zawartosc paczki dla uzytkownika:
-- `Harmonogram-Dyzurow.exe`
+- `Scheduler-Dyzurow.exe`
 - `Start.bat` (najprostsze uruchomienie)
 - `INSTRUKCJA.txt`
 - pliki wymagane przez aplikacje (`templates` i runtime PyInstaller).
 
 Przykladowa struktura po rozpakowaniu ZIP:
 ```text
-Harmonogram-Dyzurow.exe
+Scheduler-Dyzurow.exe
 Start.bat
 INSTRUKCJA.txt
 templates/
 ```
-
-## SmartScreen / "Uruchom mimo to" (Windows)
-- Bezplatnie nie da sie tego gwarantowanie usunac dla EXE pobranego z internetu.
-- Ten komunikat wynika z braku platnego podpisu kodu i reputacji SmartScreen.
-- Najprostsza opcja bez kosztow: uruchamianie wersji webowej (uzytkownik tylko otwiera link w przegladarce).
 
 ## Szybki start
 Pierwsze uruchomienie wygeneruje przykladowy plik danych wejsciowych:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from harmonogram.models import SHIFT_MAIN, SchedulerConfig, VacationRange
+from scheduler.models import SHIFT_MAIN, SchedulerConfig, VacationRange
 
 
 def june_2026_config() -> SchedulerConfig:

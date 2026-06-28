@@ -5,8 +5,8 @@ from typing import Dict, List, Sequence, Set, Tuple
 
 from openpyxl import Workbook
 
-from harmonogram.models import SchedulerConfig, WEEKDAY_NAMES_PL
-from harmonogram.solver import build_workdays, is_unavailable
+from scheduler.models import SchedulerConfig, WEEKDAY_NAMES_PL
+from scheduler.solver import build_workdays, is_unavailable
 
 EXPECTED_SHEET_HEADERS: Dict[str, Tuple[str, ...]] = {
     "Meta": ("Parametr", "Wartosc"),

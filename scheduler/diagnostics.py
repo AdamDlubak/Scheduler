@@ -19,7 +19,7 @@ DIAGNOSTICS_DIR = Path(__file__).parent.parent / "diagnostics"
 DIAGNOSTICS_DIR.mkdir(exist_ok=True)
 
 # Logger
-logger = logging.getLogger("harmonogram_diagnostics")
+logger = logging.getLogger("scheduler_diagnostics")
 logger.setLevel(logging.DEBUG)
 
 # Unikaj duplikowania handlery

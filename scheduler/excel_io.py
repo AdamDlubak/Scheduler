@@ -10,7 +10,7 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
-from harmonogram.models import (
+from scheduler.models import (
     ExcelLoadResult,
     InputValidationError,
     SHIFT_EXTRA,
@@ -19,7 +19,7 @@ from harmonogram.models import (
     SchedulerConfig,
     VacationRange,
 )
-from harmonogram.validator import (
+from scheduler.validator import (
     KNOWN_PARAM_KEYS,
     KNOWN_WEIGHT_KEYS,
     REQUIRED_SHEETS,

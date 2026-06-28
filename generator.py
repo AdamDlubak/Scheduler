@@ -8,16 +8,16 @@ from calendar import monthrange
 from datetime import date
 from pathlib import Path
 
-from harmonogram.excel_io import (
+from scheduler.excel_io import (
     export_config_to_excel,
     export_schedule_to_excel,
     export_validation_report,
     load_config_from_excel,
     write_template_excel,
 )
-from harmonogram.models import InputValidationError
-from harmonogram.sample_data import june_2026_config
-from harmonogram.solver import build_workdays, print_table, solve_schedule
+from scheduler.models import InputValidationError
+from scheduler.sample_data import june_2026_config
+from scheduler.solver import build_workdays, print_table, solve_schedule
 
 
 def build_arg_parser() -> argparse.ArgumentParser:

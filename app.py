@@ -10,17 +10,17 @@ from flask import Flask, render_template, request, jsonify, send_file
 from flask_cors import CORS
 from datetime import datetime
 
-from harmonogram.excel_io import (
+from scheduler.excel_io import (
     export_config_to_excel,
     export_schedule_to_excel,
     export_validation_report,
     load_config_from_excel,
     write_template_excel,
 )
-from harmonogram.models import InputValidationError
-from harmonogram.sample_data import june_2026_config
-from harmonogram.solver import solve_schedule, build_workdays, print_table
-from harmonogram.diagnostics import (
+from scheduler.models import InputValidationError
+from scheduler.sample_data import june_2026_config
+from scheduler.solver import solve_schedule, build_workdays, print_table
+from scheduler.diagnostics import (
     create_diagnostic_report,
     get_diagnostics_folder,
     log_info,
@@ -149,7 +149,7 @@ def upload_file():
 
 @app.route("/api/validate", methods=["POST"])
 def validate():
-    """Waliduj plik bez generowania harmonogramu"""
+    """Waliduj plik bez generowania schedulera"""
     data = request.get_json()
     filepath = data.get("filepath")
 
@@ -226,7 +226,7 @@ def validate():
 
 @app.route("/api/generate", methods=["POST"])
 def generate_schedule():
-    """Generuj harmonogram"""
+    """Generuj scheduler"""
     data = request.get_json()
     filepath = data.get("filepath")
 
@@ -238,7 +238,7 @@ def generate_schedule():
         validation = get_validation_errors(filepath)
         if not validation["success"]:
             return jsonify({
-                "error": "Plik zawiera błędy - nie można wygenerować harmonogramu",
+                "error": "Plik zawiera błędy - nie można wygenerować schedulera",
                 "errors": validation["errors"],
             }), 400
 
@@ -279,12 +279,12 @@ def generate_schedule():
 
         # Zapisz Excel
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_filename = f"harmonogram_{config.year}.{config.month:02d}_{timestamp}.xlsx"
+        output_filename = f"schedule_{config.year}.{config.month:02d}_{timestamp}.xlsx"
         output_path = DOWNLOAD_FOLDER / output_filename
 
         export_schedule_to_excel(result, str(output_path), config=config)
 
-        log_info(f"Harmonogram wygenerowany: {output_filename}")
+        log_info(f"Scheduler wygenerowany: {output_filename}")
 
         return jsonify({
             "success": True,
@@ -296,7 +296,7 @@ def generate_schedule():
         })
 
     except Exception as e:
-        log_error(f"Błąd generowania harmonogramu: {str(e)}")
+        log_error(f"Błąd generowania schedulera: {str(e)}")
         # Stwórz raport diagnostyczny
         create_diagnostic_report(
             e,

@@ -6,7 +6,7 @@ from typing import Dict, List, Sequence, Set, Tuple
 
 from ortools.sat.python import cp_model
 
-from harmonogram.models import (
+from scheduler.models import (
     ModelArtifacts,
     SHIFTS,
     SHIFT_EXTRA,
