@@ -620,7 +620,7 @@ def add_instruction_sheet(workbook: Workbook) -> None:
         ("3", "W arkuszu Urlopy podaj zakresy Data_od i Data_do."),
         ("4", "W arkuszu Niedostepnosc_tygodniowa wpisuj dni jako 1-7 (1=pon, 7=niedz) lub nazwy (pon, wt, sr...)."),
         ("5", "W arkuszu Wymuszenia wpisuj typ dyzuru: glowny albo dodatkowy."),
-        ("6", "Uruchom: python3 generator_dyzurow_czerwiec_2026.py --config <plik.xlsx> --validate-only"),
+        ("6", "Uruchom: python3 generator.py --config <plik.xlsx> --validate-only"),
         ("7", "Jesli walidacja jest poprawna, uruchom generowanie grafiku bez --validate-only."),
         ("8", "Przy bledach sprawdz plik diagnostyczny *_diagnostyka.xlsx (kolor czerwony=blad, zolty=ostrzezenie)."),
     ]

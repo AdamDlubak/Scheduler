@@ -4,15 +4,15 @@ Wersja v1.2 jest reuzywalna: dane sa w Excelu, walidator tworzy raport diagnosty
 a kod jest rozbity na moduly (loader/walidator/solver).
 
 ## Pliki
-- `generator_dyzurow_czerwiec_2026.py` - glowny runner CLI,
+- `generator.py` - glowny runner CLI,
 - `harmonogram/excel_io.py` - odczyt/zapis Excel + raport diagnostyczny,
 - `harmonogram/validator.py` - walidacje techniczne i biznesowe,
 - `harmonogram/solver.py` - model CP-SAT,
 - `harmonogram/sample_data.py` - przykladowa konfiguracja,
 - `harmonogram/models.py` - dataclass i stale,
 - `requirements.txt` - zaleznosci Pythona,
-- `dane_wejsciowe_czerwiec_2026.xlsx` - dane wejsciowe (tworzone automatycznie, jesli brak),
-- `yyyy.MM - Lista Zastępstw.xlsx` - wynikowy plik koncowy.
+- plik wejsciowy XLSX z danymi (tworzony poleceniem `--create-template` lub `--export-sample-config`),
+- wynikowy plik XLSX z harmonogramem.
 
 ## Instalacja
 ```bash
@@ -53,20 +53,20 @@ templates/
 Pierwsze uruchomienie wygeneruje przykladowy plik danych wejsciowych:
 
 ```bash
-python3 generator_dyzurow_czerwiec_2026.py
+python3 generator.py --export-sample-config dane_wejsciowe.xlsx
 ```
 
-Nastepnie edytuj `dane_wejsciowe_czerwiec_2026.xlsx` i uruchom ponownie ten sam command.
+Nastepnie edytuj `dane_wejsciowe.xlsx` i uruchom walidacje/generowanie.
 
 ## Przydatne komendy
 ```bash
-python3 generator_dyzurow_czerwiec_2026.py --create-template template_dane.xlsx
-python3 generator_dyzurow_czerwiec_2026.py --export-sample-config dane_wejsciowe_czerwiec_2026.xlsx
-python3 generator_dyzurow_czerwiec_2026.py --config dane_wejsciowe_czerwiec_2026.xlsx --validate-only
-python3 generator_dyzurow_czerwiec_2026.py --config dane_wejsciowe_czerwiec_2026.xlsx --validate-only --validation-report raport_bledow.xlsx
-python3 generator_dyzurow_czerwiec_2026.py --config dane_wejsciowe_czerwiec_2026.xlsx --output "2026.06 - Lista Zastępstw.xlsx"
-python3 generator_dyzurow_czerwiec_2026.py --config dane_wejsciowe_czerwiec_2026.xlsx --output-template "2026.06 - Lista Zastępstw.xlsx"
-python3 generator_dyzurow_czerwiec_2026.py --use-built-in-june-config
+python3 generator.py --create-template template_dane.xlsx
+python3 generator.py --export-sample-config dane_wejsciowe.xlsx
+python3 generator.py --config dane_wejsciowe.xlsx --validate-only
+python3 generator.py --config dane_wejsciowe.xlsx --validate-only --validation-report raport_bledow.xlsx
+python3 generator.py --config dane_wejsciowe.xlsx --output "2026.07 - Lista Zastepstw.xlsx"
+python3 generator.py --config dane_wejsciowe.xlsx --output-template "2026.07 - Lista Zastepstw.xlsx"
+python3 generator.py --use-built-in-june-config
 ```
 
 ## Walidator v1.2
