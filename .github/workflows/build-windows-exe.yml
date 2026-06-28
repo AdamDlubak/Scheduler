@@ -1,0 +1,88 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_label:
+        description: "Etykieta paczki (np. v1.3.0 albo test-2026-06-28)"
+        required: true
+        default: "manual-build"
+      publish_release:
+        description: "Czy opublikowac ZIP w zakladce Releases"
+        required: true
+        default: "true"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build EXE (PyInstaller)
+        run: |
+          pyinstaller --noconfirm --clean --windowed --name Harmonogram-Dyzurow --add-data "templates;templates" app.py
+
+      - name: Add user launcher and note
+        shell: pwsh
+        run: |
+          $target = "dist\Harmonogram-Dyzurow"
+          @'
+          @echo off
+          start "" "http://127.0.0.1:5001"
+          start "" "%~dp0Harmonogram-Dyzurow.exe"
+          '@ | Set-Content -Path "$target\Start.bat" -Encoding ASCII
+
+          @'
+          Generator Zastepstw - uruchomienie
+
+          1) Kliknij Start.bat
+          2) Aplikacja otworzy się w przeglądarce pod adresem http://127.0.0.1:5001
+          3) Gdy skończysz pracę, zamknij okno aplikacji (Harmonogram-Dyzurow.exe)
+
+          Uwagi:
+          - Do działania potrzebny jest Microsoft Excel do otwierania wynikowych plików .xlsx.
+          - Jeśli przeglądarka nie otworzy się sama, wpisz ręcznie: http://127.0.0.1:5001
+          '@ | Set-Content -Path "$target\INSTRUKCJA.txt" -Encoding UTF8
+
+      - name: Pack ZIP
+        shell: pwsh
+        run: |
+          $label = "${{ github.event.inputs.release_label }}"
+          Compress-Archive -Path "dist\Harmonogram-Dyzurow\*" -DestinationPath "Harmonogram-Dyzurow-$label.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe-${{ github.event.inputs.release_label }}
+          path: Harmonogram-Dyzurow-${{ github.event.inputs.release_label }}.zip
+          if-no-files-found: error
+
+      - name: Publish to Releases
+        if: ${{ github.event.inputs.publish_release == 'true' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.release_label }}
+          name: Harmonogram Dyzurow ${{ github.event.inputs.release_label }}
+          files: Harmonogram-Dyzurow-${{ github.event.inputs.release_label }}.zip
+          generate_release_notes: true
+
+
+
+
+
+

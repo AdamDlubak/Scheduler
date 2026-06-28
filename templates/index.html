@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Harmonogramów Dyżurów</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-bg: #f8f9fa;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .container-main {
+            max-width: 1200px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-weight: 700;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), #0a58ca);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 20px;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .card-body {
+            padding: 30px;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .btn-step {
+            padding: 10px 30px;
+            font-size: 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-step:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #0a58ca);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0a58ca, #0844ae);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color), #157347);
+            border: none;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #157347, #146c43);
+            color: white;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #ede9ff;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+            margin-bottom: 20px;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .diagnostic-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .diagnostic-item:last-child {
+            border-bottom: none;
+        }
+
+        .diagnostic-label {
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .diagnostic-value {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .spinner-container {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner-container .spinner-border {
+            width: 4rem;
+            height: 4rem;
+        }
+
+        .schedule-table {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .schedule-table thead {
+            background: linear-gradient(135deg, var(--primary-color), #0a58ca);
+            color: white;
+        }
+
+        .schedule-table tbody tr {
+            transition: background-color 0.2s;
+        }
+
+        .schedule-table tbody tr:hover {
+            background-color: #f0f1ff;
+        }
+
+        .schedule-table td {
+            padding: 12px 15px;
+            vertical-align: middle;
+        }
+
+        .summary-table {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .summary-table thead {
+            background: linear-gradient(135deg, var(--success-color), #157347);
+            color: white;
+        }
+
+        .summary-table tbody tr:hover {
+            background-color: #f0f1ff;
+        }
+
+        .summary-table td {
+            padding: 12px 15px;
+            vertical-align: middle;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .step-item {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: white;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid #e9ecef;
+        }
+
+        .step-item.active {
+            background: linear-gradient(135deg, var(--primary-color), #0a58ca);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .step-item.completed {
+            background: linear-gradient(135deg, var(--success-color), #157347);
+            color: white;
+            border-color: var(--success-color);
+        }
+
+        .step-item i {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .step-number {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .step-name {
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: space-between;
+        }
+
+        .loading-message {
+            text-align: center;
+            color: #495057;
+            margin-top: 10px;
+            font-size: 0.95rem;
+        }
+
+        .result-section {
+            margin-top: 30px;
+        }
+
+        .result-header {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .file-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            display: inline-block;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .step-indicator {
+                flex-direction: column;
+            }
+
+            .step-item {
+                margin-bottom: 10px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .button-group button {
+                width: 100%;
+            }
+        }
+
+        .diagnostics-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .diagnostics-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .diagnostics-button i {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container container-main">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="bi bi-calendar-check"></i> Generator Harmonogramów Dyżurów</h1>
+            <p>Szybka i łatwa konfiguracja harmonogramów pracowników</p>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step-item active" id="step-1-indicator">
+                <i class="bi bi-upload"></i>
+                <div class="step-number">Krok 1</div>
+                <div class="step-name">Upload</div>
+            </div>
+            <div class="step-item" id="step-2-indicator">
+                <i class="bi bi-check-circle"></i>
+                <div class="step-number">Krok 2</div>
+                <div class="step-name">Walidacja</div>
+            </div>
+            <div class="step-item" id="step-3-indicator">
+                <i class="bi bi-gear"></i>
+                <div class="step-number">Krok 3</div>
+                <div class="step-name">Generowanie</div>
+            </div>
+            <div class="step-item" id="step-4-indicator">
+                <i class="bi bi-download"></i>
+                <div class="step-number">Krok 4</div>
+                <div class="step-name">Pobranie</div>
+            </div>
+        </div>
+
+        <!-- Main Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Harmonogram Dyżurów
+            </div>
+            <div class="card-body">
+                <!-- Step 1: Upload -->
+                <div class="step active" id="step-1">
+                    <h5 class="mb-3"><i class="bi bi-1-circle"></i> Krok 1: Wgranie pliku</h5>
+                    <p class="text-muted">Załaduj plik Excel z danymi pracowników i parametrami harmonogramu.</p>
+                    <div id="uploadMessages"></div>
+
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                        </div>
+                        <h6>Kliknij lub przeciągnij plik tutaj</h6>
+                        <p class="text-muted small">Akceptowane: .xlsx (max 16 MB)</p>
+                        <input type="file" id="fileInput" accept=".xlsx" style="display: none;">
+                    </div>
+
+                    <div class="file-badge" id="fileBadge" style="display: none;">
+                        <i class="bi bi-check-circle"></i> <span id="fileName"></span>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-secondary btn-step" id="btnTemplate">
+                            <i class="bi bi-download"></i> Pobierz szablon
+                        </button>
+                        <button class="btn btn-outline-secondary btn-step" id="btnSampleConfig">
+                            <i class="bi bi-file-earmark-arrow-down"></i> Przykład konfiguracji
+                        </button>
+                        <button class="btn btn-primary btn-step" id="btnValidate" disabled>
+                            <i class="bi bi-arrow-right"></i> Sprawdź i kontynuuj
+                        </button>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        <strong>Szablon</strong> zawiera puste pola + opisy co wpisać. 
+                        <strong>Przykład konfiguracji</strong> zawiera już uzupełnione dane demonstracyjne.
+                    </p>
+                </div>
+
+                <!-- Step 2: Validation -->
+                <div class="step" id="step-2">
+                    <h5 class="mb-3"><i class="bi bi-2-circle"></i> Krok 2: Sprawdzenie danych</h5>
+                    <p class="text-muted">Analiza formatu i zawartości pliku…</p>
+
+                    <div id="validationMessages"></div>
+
+                    <div id="diagnosticsSection" style="display: none;">
+                        <div class="result-section">
+                            <div class="result-header">Podsumowanie zawartości pliku</div>
+                            <div id="diagnosticsContent"></div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-outline-secondary btn-step" id="btnBackFromValidation">
+                            <i class="bi bi-arrow-left"></i> Wróć
+                        </button>
+                        <button class="btn btn-primary btn-step" id="btnGenerate" disabled>
+                            <i class="bi bi-arrow-right"></i> Wygeneruj harmonogram
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Generation -->
+                <div class="step" id="step-3">
+                    <h5 class="mb-3"><i class="bi bi-3-circle"></i> Krok 3: Generowanie harmonogramu</h5>
+                    <p class="text-muted">Optymalizacja… trwa obliczanie najlepszego rozkładu dyżurów.</p>
+
+                    <div class="spinner-container" id="generationSpinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Ładowanie...</span>
+                        </div>
+                        <div class="loading-message" id="generationMessage">Optymalizacja harmonogramu...</div>
+                    </div>
+
+                    <div id="generationResult" style="display: none;">
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> <strong>Harmonogram wygenerowany pomyślnie!</strong>
+                        </div>
+
+                        <div class="result-section">
+                            <div class="result-header">Wynik optymalizacji</div>
+                            <div class="diagnostic-item">
+                                <span class="diagnostic-label">Status:</span>
+                                <span class="diagnostic-value" id="solverStatus">-</span>
+                            </div>
+                            <div class="diagnostic-item">
+                                <span class="diagnostic-label">Wskaźnik jakości grafiku:</span>
+                                <span class="diagnostic-value" id="objectiveValue">-</span>
+                            </div>
+                        </div>
+
+                        <div class="result-section">
+                            <div class="result-header">Podsumowanie dla pracowników</div>
+                            <div style="overflow-x: auto;">
+                                <table class="table summary-table" id="summaryTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Pracownik</th>
+                                            <th>Razem dyżurów</th>
+                                            <th>Główne</th>
+                                            <th>Dodatkowe</th>
+                                            <th>W piątki</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="summaryBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="result-section">
+                            <div class="result-header">Podgląd harmonogramu</div>
+                            <div style="overflow-x: auto;">
+                                <table class="table schedule-table" id="scheduleTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Dzień tygodnia</th>
+                                            <th>Dyżur główny</th>
+                                            <th>Dyżur dodatkowy</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="scheduleBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group" id="generationButtons">
+                        <button class="btn btn-outline-secondary btn-step" id="btnBackFromGeneration">
+                            <i class="bi bi-arrow-left"></i> Wróć
+                        </button>
+                        <button class="btn btn-primary btn-step" id="btnDownload" disabled>
+                            <i class="bi bi-arrow-right"></i> Pokaż wynik
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Download -->
+                <div class="step" id="step-4">
+                    <h5 class="mb-3"><i class="bi bi-4-circle"></i> Krok 4: Pobranie wyniku</h5>
+
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle"></i> <strong>Gotowe!</strong> Harmonogram został wygenerowany. Możesz go teraz pobrać.
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-outline-secondary btn-step" id="btnBackFromDownload">
+                            <i class="bi bi-arrow-left"></i> Wróć
+                        </button>
+                        <button class="btn btn-success btn-step" id="btnDownloadFile">
+                            <i class="bi bi-download"></i> Pobierz harmonogram
+                        </button>
+                        <button class="btn btn-primary btn-step" id="btnStartOver">
+                            <i class="bi bi-arrow-counterclockwise"></i> Zacznij od nowa
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Diagnostics Button -->
+    <button class="diagnostics-button" id="btnDiagnostics" title="Otwórz folder logów i raportów diagnostycznych">
+        <i class="bi bi-bug-fill"></i> Diagnostyka
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // State
+        let currentStep = 1;
+        let uploadedFilePath = null;
+        let uploadedFileName = null;
+        let generatedDownloadFileName = null;
+
+        // UI Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileBadge = document.getElementById('fileBadge');
+        const fileName = document.getElementById('fileName');
+        const btnValidate = document.getElementById('btnValidate');
+        const btnGenerate = document.getElementById('btnGenerate');
+        const btnDownload = document.getElementById('btnDownload');
+        const btnDownloadFile = document.getElementById('btnDownloadFile');
+        const validationMessages = document.getElementById('validationMessages');
+        const diagnosticsSection = document.getElementById('diagnosticsSection');
+        const diagnosticsContent = document.getElementById('diagnosticsContent');
+        const uploadMessages = document.getElementById('uploadMessages');
+
+        // Upload handlers
+        uploadArea.addEventListener('click', () => {
+            // Pozwala ponownie wybrac ten sam plik i zawsze odpalić walidację uploadu.
+            fileInput.value = '';
+            fileInput.click();
+        });
+        fileInput.addEventListener('change', handleFileSelect);
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            fileInput.files = e.dataTransfer.files;
+            handleFileSelect();
+        });
+
+         // Button handlers
+        document.getElementById('btnTemplate').addEventListener('click', downloadTemplate);
+        document.getElementById('btnSampleConfig').addEventListener('click', downloadSampleConfig);
+        document.getElementById('btnBackFromValidation').addEventListener('click', () => goToStep(1));
+        document.getElementById('btnBackFromGeneration').addEventListener('click', () => goToStep(2));
+        document.getElementById('btnBackFromDownload').addEventListener('click', () => goToStep(3));
+        btnDownload.addEventListener('click', () => goToStep(4));
+        document.getElementById('btnStartOver').addEventListener('click', resetForm);
+        document.getElementById('btnDiagnostics').addEventListener('click', openDiagnosticsFolder);
+        btnValidate.addEventListener('click', validate);
+        btnGenerate.addEventListener('click', generate);
+        btnDownloadFile.addEventListener('click', downloadResult);
+
+        // File upload
+        async function handleFileSelect() {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            uploadMessages.innerHTML = '';
+
+            try {
+                showSpinner();
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const responseClone = response.clone();
+                let data = {};
+                try {
+                    data = await response.json();
+                } catch {
+                    try {
+                        const fallbackText = await responseClone.text();
+                        data = { error: fallbackText || 'Nieznany blad odpowiedzi serwera.' };
+                    } catch {
+                        data = { error: 'Nieznany blad odpowiedzi serwera.' };
+                    }
+                }
+
+                if (data.filepath) {
+                    uploadedFilePath = data.filepath;
+                    uploadedFileName = file.name;
+                    fileName.textContent = file.name;
+                    fileBadge.style.display = 'inline-block';
+                    btnValidate.disabled = false;
+                }
+
+                if (!response.ok) {
+                    showAlert('error', 'Błąd uploadu: ' + (data.error || 'Brak szczegółów błędu.'), uploadMessages);
+                    return;
+                }
+
+                showAlert('success', 'Plik wczytany pomyślnie!', uploadMessages);
+            } catch (error) {
+                showAlert('error', 'Błąd: ' + error.message, uploadMessages);
+            }
+        }
+
+        // Validate
+        async function validate() {
+            try {
+                showSpinner();
+                const response = await fetch('/api/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filepath: uploadedFilePath })
+                });
+
+                const data = await response.json();
+
+                validationMessages.innerHTML = '';
+                goToStep(2);
+
+                if (data.success) {
+                    showAlert('success', 'Plik jest poprawny! ✓', validationMessages);
+                    
+                     // Show diagnostics
+                    const diags = data.diagnostics;
+                    diagnosticsContent.innerHTML = `
+                        <div class="diagnostic-item">
+                            <span class="diagnostic-label">Miesiąc:</span>
+                            <span class="diagnostic-value">${diags.month}</span>
+                        </div>
+                        <div class="diagnostic-item">
+                            <span class="diagnostic-label">Liczba pracowników:</span>
+                            <span class="diagnostic-value">${diags.employees_count}</span>
+                        </div>
+                        <div class="diagnostic-item">
+                            <span class="diagnostic-label">Dni robocze do zaplanowania:</span>
+                            <span class="diagnostic-value">${diags.workdays}</span>
+                        </div>
+                        <div class="diagnostic-item">
+                            <span class="diagnostic-label">Wszystkich dni w miesiącu:</span>
+                            <span class="diagnostic-value">${diags.all_days}</span>
+                        </div>
+                        <div class="diagnostic-item">
+                            <span class="diagnostic-label">Święta narodowe:</span>
+                            <span class="diagnostic-value">${diags.holidays_count}</span>
+                        </div>
+                    `;
+                    diagnosticsSection.style.display = 'block';
+
+                    if (data.warnings.length > 0) {
+                        const warningHtml = data.warnings.map(w => `<li>${w}</li>`).join('');
+                        showAlert('warning', `<strong>Ostrzeżenia:</strong><ul>${warningHtml}</ul>`, validationMessages);
+                    }
+
+                    btnGenerate.disabled = false;
+                } else {
+                    const errorHtml = data.errors.map(e => `<li>${e}</li>`).join('');
+                    showAlert('error', `<strong>Błędy walidacji:</strong><ul>${errorHtml}</ul>`, validationMessages);
+                }
+            } catch (error) {
+                goToStep(2);
+                showAlert('error', 'Błąd walidacji: ' + error.message, validationMessages);
+            }
+        }
+
+        // Generate
+        async function generate() {
+            try {
+                goToStep(3);
+                showSpinner();
+
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filepath: uploadedFilePath })
+                });
+
+                const data = await response.json();
+
+                document.getElementById('generationSpinner').style.display = 'none';
+                const resultDiv = document.getElementById('generationResult');
+
+                if (!response.ok) {
+                    showAlert('error', 'Błąd generowania: ' + data.error);
+                    document.getElementById('generationSpinner').style.display = 'block';
+                    return;
+                }
+
+                // Populate result
+                document.getElementById('solverStatus').textContent = data.status;
+                document.getElementById('objectiveValue').textContent = data.objective_value 
+                    ? data.objective_value.toFixed(2) 
+                    : 'N/A';
+
+                // Schedule table
+                const scheduleBody = document.getElementById('scheduleBody');
+                scheduleBody.innerHTML = data.schedule.map(row => `
+                    <tr>
+                        <td>${row.date}</td>
+                        <td>${row.weekday}</td>
+                        <td><strong>${row.main}</strong></td>
+                        <td>${row.extra}</td>
+                    </tr>
+                `).join('');
+
+                // Summary table
+                const summaryBody = document.getElementById('summaryBody');
+                summaryBody.innerHTML = data.summary.map(row => `
+                    <tr>
+                        <td><strong>${row.employee}</strong></td>
+                        <td>${row.total}</td>
+                        <td>${row.main}</td>
+                        <td>${row.extra}</td>
+                        <td>${row.friday}</td>
+                    </tr>
+                `).join('');
+
+                resultDiv.style.display = 'block';
+                generatedDownloadFileName = data.download_filename;
+                btnDownload.disabled = false;
+
+            } catch (error) {
+                document.getElementById('generationSpinner').style.display = 'block';
+                showAlert('error', 'Błąd: ' + error.message);
+            }
+        }
+
+        // Download
+        async function downloadTemplate() {
+            try {
+                const response = await fetch('/api/template');
+                const data = await response.json();
+                downloadFile(data.download_filename);
+            } catch (error) {
+                showAlert('error', 'Błąd pobierania: ' + error.message);
+            }
+        }
+
+        async function downloadSampleConfig() {
+            try {
+                const response = await fetch('/api/sample-config');
+                const data = await response.json();
+                downloadFile(data.download_filename);
+            } catch (error) {
+                showAlert('error', 'Błąd pobierania: ' + error.message);
+            }
+        }
+
+        async function downloadResult() {
+            downloadFile(generatedDownloadFileName);
+        }
+
+        async function openDiagnosticsFolder() {
+            try {
+                const response = await fetch('/api/diagnostics-folder');
+                const data = await response.json();
+                if (data.success) {
+                    showAlert('info', '✓ Folder diagnostyki został otwarty. Możesz teraz skopiować pliki i wysłać je mailem.');
+                } else {
+                    showAlert('error', 'Błąd otwierania folderu: ' + data.error);
+                }
+            } catch (error) {
+                showAlert('error', 'Błąd: ' + error.message);
+            }
+        }
+
+        function downloadFile(filename) {
+            const link = document.createElement('a');
+            link.href = `/api/download/${filename}`;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Navigation
+        function goToStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.step-item').forEach(s => s.classList.remove('active', 'completed'));
+
+            // Show current step
+            document.getElementById(`step-${step}`).classList.add('active');
+            document.getElementById(`step-${step}-indicator`).classList.add('active');
+
+            // Mark completed steps
+            for (let i = 1; i < step; i++) {
+                document.getElementById(`step-${i}-indicator`).classList.add('completed');
+            }
+
+            currentStep = step;
+        }
+
+        function resetForm() {
+            uploadedFilePath = null;
+            uploadedFileName = null;
+            generatedDownloadFileName = null;
+            fileInput.value = '';
+            fileBadge.style.display = 'none';
+            fileName.textContent = '';
+            btnValidate.disabled = true;
+            btnGenerate.disabled = true;
+            btnDownload.disabled = true;
+            validationMessages.innerHTML = '';
+            diagnosticsSection.style.display = 'none';
+            document.getElementById('generationSpinner').style.display = 'block';
+            document.getElementById('generationResult').style.display = 'none';
+            goToStep(1);
+            showAlert('info', 'Forma zresetowana. Możesz załadować nowy plik.');
+        }
+
+        // Utilities
+        function showAlert(type, message, container = null) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : type === 'warning' ? 'warning' : 'info'}`;
+            alertDiv.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i> ${message}`;
+
+            const target = container || validationMessages;
+            target.innerHTML = '';
+            target.appendChild(alertDiv);
+        }
+
+        function showSpinner() {
+            // Handled per-step
+        }
+    </script>
+</body>
+</html>
+
+
+
+

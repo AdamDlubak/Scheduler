@@ -19,6 +19,36 @@ a kod jest rozbity na moduly (loader/walidator/solver).
 python3 -m pip install -r requirements.txt
 ```
 
+## Budowanie paczki EXE na Windows (z macOS przez GitHub)
+W repo jest manualny workflow: `.github/workflows/build-windows-exe.yml`.
+
+Jak zbudowac nowa wersje paczki:
+1. Wypchnij aktualny kod do GitHub.
+2. Wejdz w zakladke **Actions** -> **Build Windows EXE**.
+3. Kliknij **Run workflow** i podaj `release_label` (np. `v1.3.0`).
+4. Opcja `publish_release=true` opublikuje ten sam ZIP w zakladce **Releases**.
+5. Po zakonczeniu pobierz artefakt `windows-exe-<release_label>`.
+6. W artefakcie bedzie ZIP `Harmonogram-Dyzurow-<release_label>.zip` gotowy do wyslania uzytkownikowi Windows.
+
+Zawartosc paczki dla uzytkownika:
+- `Harmonogram-Dyzurow.exe`
+- `Start.bat` (najprostsze uruchomienie)
+- `INSTRUKCJA.txt`
+- pliki wymagane przez aplikacje (`templates` i runtime PyInstaller).
+
+Przykladowa struktura po rozpakowaniu ZIP:
+```text
+Harmonogram-Dyzurow.exe
+Start.bat
+INSTRUKCJA.txt
+templates/
+```
+
+## SmartScreen / "Uruchom mimo to" (Windows)
+- Bezplatnie nie da sie tego gwarantowanie usunac dla EXE pobranego z internetu.
+- Ten komunikat wynika z braku platnego podpisu kodu i reputacji SmartScreen.
+- Najprostsza opcja bez kosztow: uruchamianie wersji webowej (uzytkownik tylko otwiera link w przegladarce).
+
 ## Szybki start
 Pierwsze uruchomienie wygeneruje przykladowy plik danych wejsciowych:
 

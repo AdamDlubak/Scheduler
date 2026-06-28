@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Runtime/generated folders
+diagnostics/
+downloads/
+uploads/
+
+# Local spreadsheets / outputs
+*.xlsx
+~$*.xlsx
+
