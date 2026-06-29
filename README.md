@@ -24,24 +24,24 @@ W repo jest manualny workflow: `.github/workflows/build-windows-exe.yml`.
 
 Jak zbudowac nowa wersje paczki:
 1. Wypchnij aktualny kod do GitHub.
-2. Wejdz w zakladke **Actions** -> **Build Windows EXE**.
+2. Wejdz w zakladke **Actions** -> **Build ShiftScheduler**.
 3. Kliknij **Run workflow** i podaj `release_label` (np. `v1.3.0`).
 4. Opcja `publish_release=true` opublikuje ten sam ZIP w zakladce **Releases**.
-5. Po zakonczeniu pobierz artefakt `windows-exe-<release_label>`.
-6. W artefakcie bedzie ZIP `Scheduler-Dyzurow-<release_label>.zip` gotowy do wyslania uzytkownikowi Windows.
+5. Po zakonczeniu pobierz artefakt `ShiftScheduler-<release_label>`.
+6. W artefakcie bedzie ZIP `ShiftScheduler-<release_label>.zip` gotowy do wyslania uzytkownikowi Windows.
 
 Workflow wykonuje smoke test uruchomienia EXE (sprawdza `http://127.0.0.1:5001`),
 wiec build zatrzyma sie, jesli paczka jest niekompletna.
 
 Zawartosc paczki dla uzytkownika:
-- `Scheduler-Dyzurow.exe`
+- `ShiftScheduler.exe`
 - `Start.bat` (najprostsze uruchomienie)
 - `INSTRUKCJA.txt`
 - pliki wymagane przez aplikacje (`templates` i runtime PyInstaller).
 
 Przykladowa struktura po rozpakowaniu ZIP:
 ```text
-Scheduler-Dyzurow.exe
+ShiftScheduler.exe
 Start.bat
 INSTRUKCJA.txt
 templates/
