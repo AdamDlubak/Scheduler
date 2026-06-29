@@ -31,11 +31,29 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pyinstaller
+          pip install pyinstaller pyinstaller-hooks-contrib
 
       - name: Build EXE (PyInstaller)
         run: |
-          pyinstaller --noconfirm --clean --windowed --name Scheduler-Dyzurow --add-data "templates;templates" app.py
+          pyinstaller --noconfirm --clean --windowed --name Scheduler-Dyzurow --add-data "templates;templates" --collect-all ortools app.py
+
+      - name: Smoke test EXE startup
+        shell: pwsh
+        run: |
+          $exe = ".\dist\Scheduler-Dyzurow\Scheduler-Dyzurow.exe"
+          $proc = Start-Process -FilePath $exe -PassThru
+          Start-Sleep -Seconds 10
+          try {
+            $resp = Invoke-WebRequest -Uri "http://127.0.0.1:5001" -UseBasicParsing -TimeoutSec 20
+            if ($resp.StatusCode -ne 200) {
+              throw "Aplikacja zwrocila status $($resp.StatusCode)"
+            }
+          }
+          finally {
+            if ($proc -and -not $proc.HasExited) {
+              Stop-Process -Id $proc.Id -Force
+            }
+          }
 
       - name: Add user launcher and note
         shell: pwsh
@@ -68,7 +86,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-exe-${{ github.event.inputs.release_label }}
+          name: shift-scheduler-${{ github.event.inputs.release_label }}
           path: Scheduler-Dyzurow-${{ github.event.inputs.release_label }}.zip
           if-no-files-found: error
 

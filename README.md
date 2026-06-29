@@ -30,6 +30,9 @@ Jak zbudowac nowa wersje paczki:
 5. Po zakonczeniu pobierz artefakt `windows-exe-<release_label>`.
 6. W artefakcie bedzie ZIP `Scheduler-Dyzurow-<release_label>.zip` gotowy do wyslania uzytkownikowi Windows.
 
+Workflow wykonuje smoke test uruchomienia EXE (sprawdza `http://127.0.0.1:5001`),
+wiec build zatrzyma sie, jesli paczka jest niekompletna.
+
 Zawartosc paczki dla uzytkownika:
 - `Scheduler-Dyzurow.exe`
 - `Start.bat` (najprostsze uruchomienie)
@@ -43,6 +46,18 @@ Start.bat
 INSTRUKCJA.txt
 templates/
 ```
+
+## Troubleshooting EXE (Windows)
+Jesli po uruchomieniu EXE pojawia sie traceback w `ortools` / `cp_model.py`,
+to najczesciej brakuje natywnych bibliotek OR-Tools w paczce.
+
+W workflow jest to naprawione przez:
+
+```text
+--collect-all ortools
+```
+
+Po tej poprawce uruchom nowy build i pobierz nowy ZIP.
 
 ## Szybki start
 Pierwsze uruchomienie wygeneruje przykladowy plik danych wejsciowych:
